@@ -22,6 +22,7 @@
  *//*--------------------------------------------------------------------*/
 
 #include "tcuAndroidPlatform.hpp"
+#include "tcuAndroidNativeActivity.hpp"
 #include "tcuAndroidUtil.hpp"
 #include "gluRenderContext.hpp"
 #include "egluNativeDisplay.hpp"
@@ -170,7 +171,7 @@ eglu::NativeWindow* NativeWindowFactory::createWindow (const eglu::WindowParams&
 	Window* window = m_windowRegistry.tryAcquireWindow();
 
 	if (!window)
-		throw ResourceError("Native window is not available", DE_NULL, __FILE__, __LINE__);
+		throw NotSupportedError("Native window is not available", DE_NULL, __FILE__, __LINE__);
 
 	return new NativeWindow(window, params.width, params.height, format);
 }
@@ -286,6 +287,9 @@ static size_t getTotalSystemMemory (ANativeActivity* activity)
 
 	try
 	{
+		if (!activity)
+			throw tcu::InternalError("No activity (running from command line?");
+
 		const size_t totalMemory = getTotalAndroidSystemMemory(activity);
 		print("Device has %.2f MiB of system memory\n", static_cast<double>(totalMemory) / static_cast<double>(MiB));
 		return totalMemory;
@@ -382,3 +386,9 @@ bool Platform::hasDisplay (vk::wsi::Type wsiType) const
 
 } // Android
 } // tcu
+
+tcu::Platform* createPlatform (void)
+{
+	tcu::Android::NativeActivity activity(NULL);
+	return new tcu::Android::Platform(activity);
+}
