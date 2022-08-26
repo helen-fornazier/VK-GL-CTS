@@ -240,7 +240,7 @@ include_directories(
 	external/vulkancts/framework/vulkan/generated/vulkan
 	)
 
-if (DE_OS_IS_ANDROID OR DE_OS_IS_IOS)
+if (DE_OS_IS_IOS)
 	# On Android deqp modules are compiled as libraries and linked into final .so
 	set(DEQP_MODULE_LIBRARIES )
 	set(DEQP_MODULE_ENTRY_POINTS )
@@ -284,7 +284,7 @@ macro (add_deqp_module MODULE_NAME SRCS LIBS EXECLIBS ENTRY)
 	set(DEQP_MODULE_LIBRARIES		${DEQP_MODULE_LIBRARIES} PARENT_SCOPE)
 	set(DEQP_MODULE_ENTRY_POINTS	${DEQP_MODULE_ENTRY_POINTS} PARENT_SCOPE)
 
-	if (NOT DE_OS_IS_ANDROID AND NOT DE_OS_IS_IOS)
+	if (NOT DE_OS_IS_IOS)
 		# Executable target
 		add_executable(${MODULE_NAME} ${PROJECT_SOURCE_DIR}/framework/platform/tcuMain.cpp ${ENTRY})
 		target_link_libraries(${MODULE_NAME} PUBLIC "${EXECLIBS}" "${MODULE_NAME}${MODULE_LIB_TARGET_POSTFIX}")
@@ -358,37 +358,7 @@ add_subdirectory(external/vulkancts/vkscpc)
 add_subdirectory(external/openglcts)
 
 # Single-binary targets
-if (DE_OS_IS_ANDROID)
-	include_directories(executor)
-	include_directories(${PROJECT_BINARY_DIR}/external/vulkancts/framework/vulkan)
-
-	set(DEQP_SRCS
-		framework/platform/android/tcuAndroidMain.cpp
-		framework/platform/android/tcuAndroidJNI.cpp
-		framework/platform/android/tcuAndroidPlatformCapabilityQueryJNI.cpp
-		framework/platform/android/tcuTestLogParserJNI.cpp
-		${DEQP_MODULE_ENTRY_POINTS}
-		)
-
-	set(DEQP_LIBS
-		tcutil-platform
-		xecore
-		${DEQP_MODULE_LIBRARIES}
-		)
-
-	add_library(deqp SHARED ${DEQP_SRCS})
-	target_link_libraries(deqp ${DEQP_LIBS})
-
-	# Separate out the debug information because it's enormous
-	add_custom_command(TARGET deqp POST_BUILD
-		COMMAND ${CMAKE_STRIP} --only-keep-debug -o $<TARGET_FILE:deqp>.debug $<TARGET_FILE:deqp>
-		COMMAND ${CMAKE_STRIP} -g $<TARGET_FILE:deqp>)
-
-	# Needed by OpenGL CTS that defines its own activity but depends on
-	# common Android support code.
-	target_include_directories(deqp PRIVATE framework/platform/android)
-
-elseif (DE_OS_IS_IOS)
+if (DE_OS_IS_IOS)
 	# Code sign identity
 	set(DEQP_IOS_CODE_SIGN_IDENTITY "drawElements" CACHE STRING "Code sign identity for iOS build")
 
